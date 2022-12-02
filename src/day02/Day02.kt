@@ -17,6 +17,21 @@ enum class Move(val value: Int) {
         value                 -> Result.DRAW
         else                  -> Result.LOSE
     }
+
+    fun obtainsAgainst(result: Result): Move = when (result) {
+        Result.WIN  -> fromValue((value % 3) + 1)
+        Result.LOSE -> fromValue(((value + 1) % 3) + 1)
+        else        -> this
+    }
+
+    companion object {
+        fun fromValue(value: Int): Move = when (value) {
+            1    -> ROCK
+            2    -> PAPER
+            3    -> SCISSORS
+            else -> throw IllegalArgumentException("We should never get here")
+        }
+    }
 }
 
 fun main() {
@@ -30,6 +45,13 @@ fun main() {
         else     -> throw IllegalArgumentException("We should never get here")
     }
 
+    fun decryptResult(encryptedResult: String): Result = when (encryptedResult) {
+        "X"  -> Result.LOSE
+        "Y"  -> Result.DRAW
+        "Z"  -> Result.WIN
+        else -> throw IllegalArgumentException("We should never get here")
+    }
+
     fun part1(input: List<String>): Int {
         var score = 0
         for (line in input) {
@@ -41,7 +63,17 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        var score = 0
+        for (line in input) {
+            val (theirMoveStr, myResultStr, _) = line.split(" ")
+            val theirMove = decryptMove(theirMoveStr)
+            val myResult = decryptResult(myResultStr)
+            val myMove = theirMove.obtainsAgainst(myResult)
+
+            score += myMove.value + myResult.score
+        }
+
+        return score
     }
 
     val input = readInput("input")
