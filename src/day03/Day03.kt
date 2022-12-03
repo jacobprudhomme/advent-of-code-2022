@@ -31,7 +31,21 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        var sumOfPriorities = 0
+        var group = arrayListOf<Set<Char>>()
+        for (line in input) {
+            group.add(line.toSet())
+
+            if (group.size == 3) {
+                val itemsCommonToAllRucksacks = group.reduce { acc, currRucksack -> acc.intersect(currRucksack) }
+                val item = itemsCommonToAllRucksacks.first()
+                sumOfPriorities += getItemPriority(item)
+
+                group = arrayListOf()
+            }
+        }
+
+        return sumOfPriorities
     }
 
     val input = readInput("input")
