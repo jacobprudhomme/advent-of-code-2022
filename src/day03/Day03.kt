@@ -19,7 +19,7 @@ fun main() {
             val itemsInFirstRucksack = line.take(numItemsInFirstRucksack).toSet()
             val seenInSecondRucksack = mutableSetOf<Char>()
             for (item in line.takeLast(numItemsInFirstRucksack)) {
-                if (itemsInFirstRucksack.contains(item) && !seenInSecondRucksack.contains(item)) {
+                if (itemsInFirstRucksack.contains(item) and !seenInSecondRucksack.contains(item)) {
                     sumOfPriorities += getItemPriority(item)
 
                     seenInSecondRucksack.add(item)

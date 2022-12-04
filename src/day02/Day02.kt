@@ -65,12 +65,10 @@ fun main() {
     fun part2(input: List<String>): Int {
         var score = 0
         for (line in input) {
-            val (theirMoveStr, myResultStr, _) = line.split(" ")
-            val theirMove = decryptMove(theirMoveStr)
-            val myResult = decryptResult(myResultStr)
-            val myMove = theirMove.obtainsAgainst(myResult)
-
-            score += myMove.value + myResult.score
+            val (theirMove, myResult) = line.split(" ").let { (theirMoveStr, myResultStr, _) ->
+                Pair(decryptMove(theirMoveStr), decryptResult(myResultStr))
+            }
+            score += theirMove.obtainsAgainst(myResult).value + myResult.score
         }
 
         return score
