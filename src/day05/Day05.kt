@@ -50,8 +50,18 @@ fun main() {
         return crateStacks.map { it.last() }.joinToString("")
     }
 
-    fun part2(input: List<String>): Int {
-        return input.size
+    fun part2(input: List<String>): String {
+        val (crateStacks, craneProcedure) = processInput(input)
+
+        for ((num, from, to) in craneProcedure) {
+            val crates = crateStacks[from].takeLast(num)
+            repeat(num) {
+                crateStacks[from].removeLast()
+            }
+            crateStacks[to].addAll(crates)
+        }
+
+        return crateStacks.map { it.last() }.joinToString("")
     }
 
     val input = readInput("input")
