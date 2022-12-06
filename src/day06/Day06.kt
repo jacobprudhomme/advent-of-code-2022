@@ -22,7 +22,20 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val WINDOW_SIZE = 14
+
+        var charactersSeen = WINDOW_SIZE - 1
+        outerLoop@ for (window in input.first().windowed(WINDOW_SIZE)) {
+            ++charactersSeen
+
+            for (char in window.dropLast(1)) {
+                if (window.count { it == char } > 1) continue@outerLoop
+            }
+
+            break
+        }
+
+        return charactersSeen
     }
 
     val input = readInput("input")
