@@ -1,4 +1,5 @@
 import java.io.File
+import kotlin.math.min
 import kotlin.properties.Delegates
 
 sealed class FileSystem(val name: String) {
@@ -27,6 +28,14 @@ class Directory(name: String = "/"): FileSystem(name) {
         children.fold(if (this.size < size) { this.size } else { 0 }) { acc, dir ->
             when (dir) {
                 is Directory -> acc + dir.sumDirsLessThan(size)
+                else         -> acc
+            }
+        }
+
+    fun findSmallestDirGreaterThan(size: Int): Int =
+        children.fold(if (this.size < size) { Int.MAX_VALUE } else { this.size }) { acc, dir ->
+            when (dir) {
+                is Directory -> min(acc, dir.findSmallestDirGreaterThan(size))
                 else         -> acc
             }
         }
@@ -111,7 +120,13 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val TOTAL_DISK_SIZE = 70000000
+        val UPDATE_SIZE     = 30000000
+
+        val fileSystem = processInput(input)
+        val unusedSpace = TOTAL_DISK_SIZE - fileSystem.size
+        val spaceNeededToUpdate = UPDATE_SIZE - unusedSpace
+        return fileSystem.findSmallestDirGreaterThan(spaceNeededToUpdate)
     }
 
     val input = readInput("input")
