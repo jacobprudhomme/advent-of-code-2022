@@ -13,26 +13,58 @@ fun main() {
         }
     }
 
-    fun executeNoop(state: State, events: MutableList<Pair<Int, Int>>) {
-        state.cycle += 1
+    fun draw(state: State) {
+        val writingPosition = (state.cycle - 1) % 40
 
-        recordEvent(state, events)
-    }
+        if (writingPosition in ((state.X-1)..(state.X+1))) {
+            print("#")
+        } else {
+            print(".")
+        }
 
-    fun executeAddx(state: State, events: MutableList<Pair<Int, Int>>, summand: Int) {
-        for (i in 1..2) {
-            state.cycle += 1
-            if (i == 2) { state.X += summand }
-
-            recordEvent(state, events)
+        if (writingPosition == 39) {
+            println()
         }
     }
 
-    fun executeCommand(state: State, events: MutableList<Pair<Int, Int>>, command: String) {
+    fun executeNoop(
+        state: State,
+        events: MutableList<Pair<Int, Int>>,
+        drawPixel: Boolean
+    ) {
+        if (drawPixel) draw(state)
+
+        state.cycle += 1
+
+        if (!drawPixel) recordEvent(state, events)
+    }
+
+    fun executeAddx(
+        state: State,
+        events: MutableList<Pair<Int, Int>>,
+        summand: Int,
+        drawPixel: Boolean
+    ) {
+        for (i in 1..2) {
+            if (drawPixel) draw(state)
+
+            state.cycle += 1
+            if (i == 2) { state.X += summand }
+
+            if (!drawPixel) recordEvent(state, events)
+        }
+    }
+
+    fun executeCommand(
+        state: State,
+        events: MutableList<Pair<Int, Int>>,
+        command: String,
+        drawPixel: Boolean = false
+    ) {
         val parts = command.split(" ")
         when (parts[0]) {
-            "noop" -> executeNoop(state, events)
-            "addx" -> executeAddx(state, events, parts[1].toInt())
+            "noop" -> executeNoop(state, events, drawPixel)
+            "addx" -> executeAddx(state, events, parts[1].toInt(), drawPixel)
             else   -> throw IllegalArgumentException("We should never get here")
         }
     }
@@ -47,8 +79,12 @@ fun main() {
         return events.fold(0) { acc, (cycle, X) -> acc + (cycle * X) }
     }
 
-    fun part2(input: List<String>): Int {
-        return input.size
+    fun part2(input: List<String>) {
+        val state = State(1, 1)
+        val events = mutableListOf<Pair<Int, Int>>()
+        for (command in input) {
+            executeCommand(state, events, command, true)
+        }
     }
 
     val input = readInput("input")
