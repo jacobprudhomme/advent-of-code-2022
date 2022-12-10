@@ -82,7 +82,24 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val currPositions = MutableList(10) { Pair(0, 0) }
+        val seenPositions = mutableSetOf(currPositions.last())
+        for (line in input) {
+            val (dir, steps) = line.split(" ").let { (dirStr, stepsStr, _) ->
+                Pair(convertToDirection(dirStr), stepsStr.toInt())
+            }
+
+            repeat(steps) {
+                currPositions[0] = moveHead(currPositions[0], dir)
+                for (knotIndex in currPositions.indices.drop(1)) {
+                    currPositions[knotIndex] = moveTail(currPositions[knotIndex-1], currPositions[knotIndex])
+                }
+
+                seenPositions.add(currPositions.last())
+            }
+        }
+
+        return seenPositions.count()
     }
 
     val input = readInput("input")
