@@ -1,13 +1,14 @@
 import java.io.File
 import java.lang.IllegalArgumentException
+import java.math.BigInteger
 import java.util.PriorityQueue
 
 class Monkey(
     val heldItems: MutableList<Int>,
-    val applyOperation: (Int) -> Int,
+    val applyOperation: (Int) -> BigInteger,
     val decide: (Int) -> Int
 ) {
-    var inspectedItems = 0
+    var inspectedItems: BigInteger = BigInteger.ZERO
 
     fun inspect() { ++inspectedItems }
 }
@@ -34,26 +35,41 @@ fun main() {
         opStr: String,
         leftArg: String,
         rightArg: String
-    ): (Int) -> Int {
-        val operation: (Int, Int) -> Int = when (opStr) {
+    ): (Int) -> BigInteger {
+        val operation: (BigInteger, BigInteger) -> BigInteger = when (opStr) {
             "+"  -> { m, n -> m + n }
             "*"  -> { m, n -> m * n }
             else -> throw IllegalArgumentException("We should never get here")
         }
 
         return if ((leftArg == "old") and (rightArg == "old")) {
-            { n -> operation(n, n) }
+            { n -> operation(n.toBigInteger(), n.toBigInteger()) }
         } else if (leftArg == "old") {
-            { n -> operation(n, rightArg.toInt()) }
+            { n -> operation(n.toBigInteger(), rightArg.toBigInteger()) }
         } else if (rightArg == "old") {
-            { n -> operation(leftArg.toInt(), n) }
+            { n -> operation(leftArg.toBigInteger(), n.toBigInteger()) }
         } else {
-            { _ -> operation(leftArg.toInt(), rightArg.toInt()) }
+            { _ -> operation(leftArg.toBigInteger(), rightArg.toBigInteger()) }
         }
     }
 
-    fun processInput(input: List<String>): Array<Monkey> {
+    fun gcd(m: Int, n: Int): Int {
+        var a = m
+        var b = n
+        while (b > 0) {
+            val temp = b
+            b = a % b
+            a = temp
+        }
+
+        return a
+    }
+
+    fun lcm(m: Int, n: Int): Int = (m * n) / gcd(m, n)
+
+    fun processInput(input: List<String>): Pair<Array<Monkey>, Int> {
         val monkeys = mutableListOf<Monkey>()
+        val testValues = mutableListOf<Int>()
         for (monkeyStr in iterateInput(input)) {
             val initItems = monkeyStr[0].substring(18).split(", ").map(String::toInt)
             val (leftArg, op, rightArg, _) = monkeyStr[1].substring(19).split(" ")
@@ -66,18 +82,21 @@ fun main() {
                 processOperation(op, leftArg, rightArg)
             ) { n -> if (n % testValue == 0) { trueResult } else { falseResult } }
             monkeys.add(monkey)
+            testValues.add(testValue)
         }
 
-        return monkeys.toTypedArray()
+        return Pair(monkeys.toTypedArray(), testValues.reduce { acc, value -> lcm(acc, value) })
     }
 
-    fun doRound(monkeys: Array<Monkey>) {
+    fun doRound(monkeys: Array<Monkey>, spiraling: Boolean = false, lcm: Int = 1) {
         for (monkey in monkeys) {
             while (monkey.heldItems.isNotEmpty()) {
                 val currItem = monkey.heldItems.removeFirst()
                 monkey.inspect()
 
-                val worryLevel = monkey.applyOperation(currItem).div(3)
+                val worryLevel = monkey.applyOperation(currItem)
+                    .let { if (spiraling) { it % lcm.toBigInteger() } else { it.div(3.toBigInteger()) } }
+                    .toInt()
                 val monkeyToCatch = monkey.decide(worryLevel)
 
                 monkeys[monkeyToCatch].heldItems.add(worryLevel)
@@ -85,14 +104,14 @@ fun main() {
         }
     }
 
-    fun multiplyTwoLargest(monkeys: Array<Monkey>): Int {
+    fun multiplyTwoLargest(monkeys: Array<Monkey>): BigInteger {
         val monkeysByInspectedElements = PriorityQueue(monkeys.map { -it.inspectedItems })  // Induce max-queue
 
         return monkeysByInspectedElements.poll() * monkeysByInspectedElements.poll()
     }
 
-    fun part1(input: List<String>): Int {
-        val monkeys = processInput(input)
+    fun part1(input: List<String>): BigInteger {
+        val (monkeys, _) = processInput(input)
 
         repeat(20) {
             doRound(monkeys)
@@ -101,8 +120,14 @@ fun main() {
         return multiplyTwoLargest(monkeys)
     }
 
-    fun part2(input: List<String>): Int {
-        return input.size
+    fun part2(input: List<String>): BigInteger {
+        val (monkeys, lcm) = processInput(input)
+
+        repeat(10000) {
+            doRound(monkeys, spiraling=true, lcm=lcm)
+        }
+
+        return multiplyTwoLargest(monkeys)
     }
 
     val input = readInput("input")
